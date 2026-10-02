@@ -1,0 +1,12 @@
+{
+  "_note": "SAMPLE data used when the live Open-Meteo forecast is unavailable. Values are illustrative, not real observations.",
+  "districts": {
+    "Ludhiana (Punjab)":      {"lat": 30.90, "lon": 75.85, "sample": [[33,25,82,0],[32,25,88,18],[30,24,92,32],[31,24,86,4],[33,25,80,0]]},
+    "Sangrur (Punjab)":       {"lat": 30.25, "lon": 75.84, "sample": [[34,26,75,0],[35,26,72,0],[36,27,70,0],[35,26,74,2],[34,25,78,0]]},
+    "Karnal (Haryana)":       {"lat": 29.69, "lon": 76.99, "sample": [[32,24,85,6],[29,23,93,14],[28,22,95,22],[29,22,90,3],[31,23,84,0]]},
+    "Kurukshetra (Haryana)":  {"lat": 29.97, "lon": 76.88, "sample": [[33,25,80,0],[33,25,82,0],[32,24,85,8],[31,24,88,12],[32,24,84,0]]},
+    "New Delhi (Delhi-NCR)":  {"lat": 28.61, "lon": 77.21, "sample": [[36,27,60,0],[37,28,58,0],[37,28,55,0],[36,27,62,0],[35,27,66,1]]},
+    "Gautam Buddha Nagar (UP)": {"lat": 28.47, "lon": 77.51, "sample": [[35,26,70,0],[34,26,74,3],[33,25,79,10],[33,25,80,0],[34,26,75,0]]}
+  },
+  "_columns": ["max_temp_C", "min_temp_C", "max_relative_humidity_pct", "rain_mm"]
+}

@@ -1,0 +1,170 @@
+[
+  {
+    "id": "KB01", "topic": "Crop calendar", "stage": "nursery",
+    "title": "Nursery sowing window (Kharif, North-West India)",
+    "keywords": "nursery sowing date time when sow seed bed kharif may june window",
+    "text": "In Punjab, Haryana and Delhi-NCR, rice nursery for kharif is generally sown from mid-May to mid-June depending on variety duration. Short-duration varieties (e.g., PR 126) can be sown later than long-duration ones. State governments in Punjab and Haryana notify the earliest permitted transplanting dates each year to save groundwater, so farmers should follow the current year's notification."
+  },
+  {
+    "id": "KB02", "topic": "Seed", "stage": "nursery",
+    "title": "Seed rate and seed treatment",
+    "keywords": "seed rate kg per acre hectare seed treatment fungicide bakanae soak salt water",
+    "text": "Typical seed rate for transplanted rice is about 8 kg per acre (20 kg/ha) for nursery. Seed should be cleaned by floating in salt water and removing light seeds. Seed treatment with a recommended fungicide (e.g., carbendazim-based) before sowing helps prevent seed-borne diseases such as bakanae and blast. Use only the product and dose written on the label or advised by the local KVK."
+  },
+  {
+    "id": "KB03", "topic": "Nursery", "stage": "nursery",
+    "title": "Nursery management and seedling age",
+    "keywords": "nursery seedlings age days old transplant uproot healthy yellowing nursery iron",
+    "text": "Seedlings are ready for transplanting at about 25-30 days (4-5 leaf stage). Over-aged seedlings tiller poorly. Yellowing of young leaves in nursery on light soils is often iron deficiency; keeping the nursery moist (not dry) and foliar iron sulphate as per local advice corrects it."
+  },
+  {
+    "id": "KB04", "topic": "Transplanting", "stage": "transplanting",
+    "title": "Transplanting spacing and plant population",
+    "keywords": "transplanting spacing distance hills per square metre puddling depth seedlings per hill",
+    "text": "Transplant 2 seedlings per hill at about 20 x 15 cm spacing (roughly 33 hills per square metre) in a well-puddled, levelled field. Transplant shallow (2-3 cm). Laser land levelling saves irrigation water and improves fertiliser efficiency. Gap-fill missing hills within a week."
+  },
+  {
+    "id": "KB05", "topic": "Direct seeding", "stage": "nursery",
+    "title": "Direct Seeded Rice (DSR)",
+    "keywords": "dsr direct seeded rice direct sowing tar wattar water saving labour weed",
+    "text": "Direct Seeded Rice (DSR) avoids nursery and puddling, saving water and labour. It suits medium-to-heavy soils; it is not recommended on light sandy soils due to iron deficiency and weed pressure. Weed control (pre-emergence and post-emergence herbicides as per state recommendation) is the most critical step in DSR. Several states offer per-acre incentives for DSR."
+  },
+  {
+    "id": "KB06", "topic": "Nutrients", "stage": "transplanting",
+    "title": "General fertiliser recommendation (high-yielding non-basmati)",
+    "keywords": "fertiliser fertilizer urea dap npk nitrogen phosphorus potash dose split how much",
+    "text": "A general recommendation for high-yielding non-basmati rice is about 120:60:40 kg N:P2O5:K2O per hectare, with nitrogen applied in 3 splits (roughly at transplanting/early establishment, active tillering, and panicle initiation). Basmati varieties need less nitrogen; excess N causes lodging and more pest/disease. Exact doses should follow a soil test (Soil Health Card) and the state Package of Practices. Leaf Colour Chart (LCC) can be used to decide need-based N top-dressing."
+  },
+  {
+    "id": "KB07", "topic": "Nutrients", "stage": "tillering",
+    "title": "Zinc deficiency (Khaira)",
+    "keywords": "khaira zinc deficiency rusty brown spots bronzing stunted patchy older leaves zinc sulphate",
+    "text": "Zinc deficiency (locally 'khaira') appears 2-4 weeks after transplanting as rusty-brown spots on older leaves, bronzing, stunted plants and uneven patches. It is common in alkaline and intensively cropped soils of North India. Application of zinc sulphate (basal, or foliar spray on appearance) as per the state recommendation corrects it."
+  },
+  {
+    "id": "KB08", "topic": "Nutrients", "stage": "tillering",
+    "title": "Nitrogen deficiency and Leaf Colour Chart",
+    "keywords": "nitrogen deficiency pale yellow green leaves lcc leaf colour chart urea top dressing",
+    "text": "Uniform pale or yellowish-green colour starting from older leaves usually indicates nitrogen deficiency. Compare the topmost fully opened leaf with the Leaf Colour Chart (LCC) every 7-10 days from about 2 weeks after transplanting; apply urea only when the reading is below the threshold shade recommended for the variety. Avoid urea application just before heavy rain."
+  },
+  {
+    "id": "KB09", "topic": "Water", "stage": "tillering",
+    "title": "Irrigation and Alternate Wetting and Drying (AWD)",
+    "keywords": "irrigation water awd alternate wetting drying standing water how much when irrigate pani",
+    "text": "Keep standing water for about the first 2 weeks after transplanting for good establishment. After that, Alternate Wetting and Drying (AWD) can be followed: irrigate again about 2 days after the ponded water has disappeared. AWD saves 20-30% water without yield loss in most conditions. Keep the field wet (not dry) during flowering. Stop irrigation about 10-15 days before harvest."
+  },
+  {
+    "id": "KB10", "topic": "Weeds", "stage": "tillering",
+    "title": "Weed management in transplanted rice",
+    "keywords": "weed weeds herbicide grass sedge weeding control echinochloa",
+    "text": "Weeds compete most in the first 30-40 days. In transplanted rice, a pre-emergence herbicide applied within 2-3 days of transplanting in standing water, followed by one hand weeding if needed, is common practice. Use only herbicides recommended for rice in your state, at the label dose."
+  },
+  {
+    "id": "KB11", "topic": "Pest", "stage": "tillering",
+    "title": "Yellow stem borer",
+    "keywords": "stem borer dead heart white ear whitehead central shoot dries tunnel larva moth pest",
+    "text": "Yellow stem borer larvae bore into stems. At vegetative stage the central shoot dries ('dead heart'); at heading the whole panicle turns white and empty ('white ear/whitehead'), and the affected tiller pulls out easily. Economic threshold is about 5% dead hearts. Install pheromone traps for monitoring, clip seedling tips before transplanting (removes egg masses), and use a recommended insecticide only when threshold is crossed."
+  },
+  {
+    "id": "KB12", "topic": "Pest", "stage": "flowering",
+    "title": "Brown planthopper (BPH)",
+    "keywords": "brown planthopper bph hopper burn circular patches drying base of plant insects pest tela",
+    "text": "Brown planthopper (BPH) and white-backed planthopper suck sap at the base of plants. Heavy infestation causes 'hopper burn' - circular patches of plants that dry and collapse. Check the base of plants by tapping; threshold is roughly 5-10 hoppers per hill. Avoid excess nitrogen, drain the field for a few days, and spray a recommended insecticide directed at the base of the plants. Avoid synthetic pyrethroids, which can cause BPH resurgence."
+  },
+  {
+    "id": "KB13", "topic": "Pest", "stage": "tillering",
+    "title": "Rice leaf folder",
+    "keywords": "leaf folder folded leaves white streaks scraped leaf rolled pest caterpillar",
+    "text": "Leaf folder larvae fold leaves lengthwise and scrape the green tissue, leaving white streaks. Damage is often more in shaded, heavily fertilised fields. Action is suggested if roughly 10% of leaves are damaged in the vegetative stage. Passing a rope over the crop to dislodge larvae and judicious nitrogen help; insecticide only if threshold is crossed."
+  },
+  {
+    "id": "KB14", "topic": "Pest", "stage": "grain filling",
+    "title": "Rice gundhi bug (earhead bug)",
+    "keywords": "gundhi bug earhead bug foul smell milky grain chaffy discoloured grain pest",
+    "text": "Gundhi bug sucks milk from developing grains at the milky stage, causing chaffy or spotted grains; fields have a characteristic foul smell. Monitor at flowering-milky stage, especially near grassy bunds. Clean bunds and spray a recommended insecticide only when bugs exceed the local threshold."
+  },
+  {
+    "id": "KB15", "topic": "Disease", "stage": "tillering",
+    "title": "Rice blast",
+    "keywords": "blast spindle eye shaped spots grey centre brown margin neck blast node fungus disease jhulsa",
+    "text": "Blast (fungal, Magnaporthe oryzae) causes spindle or eye-shaped leaf spots with grey/whitish centres and brown margins. Neck blast makes the panicle neck turn black and break, giving empty grains. It is favoured by cool nights, high humidity, long leaf wetness and excess nitrogen; basmati varieties are often susceptible. Use resistant varieties, balanced N, and a recommended fungicide (e.g., tricyclazole-based, as per label) at disease appearance or at boot/heading in high-risk weather."
+  },
+  {
+    "id": "KB16", "topic": "Disease", "stage": "tillering",
+    "title": "Bacterial leaf blight (BLB)",
+    "keywords": "bacterial leaf blight blb yellowing from tip wavy margin straw coloured leaves kresek ooze disease",
+    "text": "Bacterial leaf blight causes yellow to straw-coloured stripes starting from the leaf tip and moving down along the margins with a wavy edge; young plants may wilt ('kresek'). It spreads with rain, wind and flood water. There is no fully effective chemical cure; avoid excess nitrogen, apply nitrogen in splits, avoid field-to-field water flow, and grow resistant varieties. Consult the KVK for locally approved measures."
+  },
+  {
+    "id": "KB17", "topic": "Disease", "stage": "flowering",
+    "title": "Sheath blight",
+    "keywords": "sheath blight oval greenish grey lesions sheath near water line snake skin disease",
+    "text": "Sheath blight (Rhizoctonia solani) begins as oval greenish-grey lesions on leaf sheaths near the water line, later enlarging with brown borders into a 'snake-skin' pattern moving upward. Dense planting, high nitrogen and humid weather favour it. Remove weeds from bunds, avoid excess N, and use a recommended fungicide (e.g., validamycin or hexaconazole-based as per label) when it appears."
+  },
+  {
+    "id": "KB18", "topic": "Disease", "stage": "grain filling",
+    "title": "False smut",
+    "keywords": "false smut yellow orange green balls on grains spore balls panicle disease haldi",
+    "text": "False smut converts individual grains into yellow-orange to greenish-black velvety spore balls. It is favoured by rain and high humidity at flowering and high nitrogen. Avoid late excess nitrogen; a recommended fungicide spray at boot stage is advised in areas with a history of the disease."
+  },
+  {
+    "id": "KB19", "topic": "Disease", "stage": "nursery",
+    "title": "Bakanae (foot rot)",
+    "keywords": "bakanae foot rot tall thin pale seedlings elongated plants dying basmati",
+    "text": "Bakanae causes abnormally tall, thin, pale-green seedlings/plants that later die. It is seed-borne and especially serious in basmati. Use treated seed, remove and destroy affected plants, and treat seedling roots/seed with a recommended fungicide before transplanting."
+  },
+  {
+    "id": "KB20", "topic": "Weather", "stage": "all",
+    "title": "Spraying and weather",
+    "keywords": "spray rain wind weather when to spray forecast washing pesticide fertiliser",
+    "text": "Do not spray pesticides or top-dress urea if heavy rain is expected within 24-48 hours, as it washes off or leaches. Avoid spraying in strong wind (drift) and in the hottest part of the day; early morning or evening is better. Always use protective gear while spraying."
+  },
+  {
+    "id": "KB21", "topic": "Weather", "stage": "flowering",
+    "title": "Heat stress at flowering",
+    "keywords": "heat high temperature flowering sterility empty grains hot weather 35 degrees",
+    "text": "Temperatures above about 35 deg C at flowering (anthesis) can cause spikelet sterility and empty grains. Keeping a thin layer of water in the field during flowering helps moderate canopy temperature."
+  },
+  {
+    "id": "KB22", "topic": "Harvest", "stage": "maturity",
+    "title": "Harvest timing",
+    "keywords": "harvest when cut maturity golden grain moisture combine",
+    "text": "Harvest when about 80-85% of grains in the panicle are golden/straw coloured and grain moisture is around 20-22%. Drain the field 10-15 days before harvest. Late harvest increases shattering and broken grains."
+  },
+  {
+    "id": "KB23", "topic": "Residue", "stage": "maturity",
+    "title": "Stubble/residue management (no burning)",
+    "keywords": "stubble parali burning residue straw happy seeder super seeder decomposer smoke",
+    "text": "Burning paddy straw (parali) is banned and damages soil health and air quality. Options include in-situ management with Happy Seeder/Super Seeder or mulching, incorporation with microbial decomposers such as the Pusa decomposer, and ex-situ use (baling for biomass plants). Custom Hiring Centres provide machines on subsidy/rent."
+  },
+  {
+    "id": "KB24", "topic": "Variety", "stage": "all",
+    "title": "Short-duration varieties and Pusa 44",
+    "keywords": "variety varieties pr 126 pusa 44 short duration long duration which variety",
+    "text": "Short-duration varieties such as PR 126 mature in roughly 120-125 days from sowing, save irrigation water and leave more time for stubble management. Long-duration varieties such as Pusa 44 use more water and produce more straw; the Punjab government has discouraged/banned Pusa 44 cultivation in recent seasons. Check the current state-recommended variety list before choosing."
+  },
+  {
+    "id": "KB25", "topic": "Variety", "stage": "all",
+    "title": "Basmati varieties and pesticide residues",
+    "keywords": "basmati 1121 1509 1718 export residue banned pesticide",
+    "text": "Basmati (e.g., Pusa Basmati 1121, 1509, 1718) is grown for export markets that set strict pesticide residue limits. Several state governments periodically restrict the sale of specific pesticides for basmati. Farmers should follow the state advisory for basmati and avoid unnecessary sprays."
+  },
+  {
+    "id": "KB26", "topic": "Schemes", "stage": "all",
+    "title": "Where to get expert help",
+    "keywords": "help expert kvk krishi vigyan kendra kisan call centre helpline contact officer",
+    "text": "For field-specific diagnosis, farmers can contact their district Krishi Vigyan Kendra (KVK), the state agriculture department, or the Kisan Call Centre toll-free number 1800-180-1551 (local-language support). Soil testing is available through the Soil Health Card scheme."
+  },
+  {
+    "id": "KB27", "topic": "Safety", "stage": "all",
+    "title": "Pesticide safety and poisoning",
+    "keywords": "poison poisoning swallowed pesticide safety mask gloves dizziness vomiting accident",
+    "text": "Always wear gloves, mask and full-sleeve clothing while spraying, do not eat or smoke while spraying, and store pesticides away from children and food. In case of pesticide poisoning (dizziness, vomiting, breathing difficulty), take the person to the nearest hospital immediately and carry the pesticide label; call emergency number 108/112."
+  },
+  {
+    "id": "KB28", "topic": "Heavy metals", "stage": "all",
+    "title": "Arsenic and cadmium in paddy soils",
+    "keywords": "arsenic cadmium heavy metal contamination groundwater toxicity soil polluted",
+    "text": "Rice can accumulate arsenic (from arsenic-rich groundwater, e.g., parts of the Indo-Gangetic plains) and cadmium (from contaminated soils/sewage or some phosphate fertilisers). Practices such as AWD irrigation reduce arsenic uptake, while maintaining soil pH and avoiding sewage irrigation reduce cadmium risk. Soil and water testing through a recognised lab is the first step; consult experts for remediation."
+  }
+]
