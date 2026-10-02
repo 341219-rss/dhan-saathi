@@ -40,18 +40,29 @@ SYNONYMS = {
     "sookh": "dries", "sukh": "dries", "sookha": "dries", "beech": "central", "beech-wala": "central",
     "patta": "leaf", "patte": "leaves", "pattiyan": "leaves", "पत्ते": "leaves", "पत्तियाँ": "leaves", "धब्बे": "spots",
     "dhabbe": "spots", "bhoore": "brown", "भूरे": "brown",
-    "dhan": "rice", "धान": "rice", "ਝੋਨਾ": "rice", "chawal": "rice",
+    "leaves": "leaf", "dhan": "rice", "धान": "rice", "ਝੋਨਾ": "rice", "chawal": "rice",
 }
 STOP = set("""a an the is are was were be to of in on for at by with and or my me i we our
 what which when how why do does can should will it this that these those there please tell
 about give from have has had any some your you about field crop rice paddy""".split())
 
 
+def _stem(w: str) -> str:
+    """Very light English stemmer so 'shoots'/'shoot' and 'drying'/'dries'/'dried' match.
+    (Edge case found in live testing: 'central shoots are drying' retrieved BPH instead of stem borer.)"""
+    if not w.isascii() or len(w) <= 4:
+        return w
+    for suf, rep in (("ies", "y"), ("ied", "y"), ("ing", ""), ("ed", ""), ("es", ""), ("s", "")):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            return w[: -len(suf)] + rep
+    return w
+
+
 def _tokens(text: str) -> list[str]:
     words = re.findall(r"[\wऀ-ॿ਀-੿]+", text.lower())
     out = []
     for w in words:
-        w = SYNONYMS.get(w, w)
+        w = _stem(SYNONYMS.get(w, w))
         if w not in STOP and len(w) > 1:
             out.append(w)
     return out
@@ -214,6 +225,9 @@ def check_input(text: str) -> dict:
 GENERIC = {"india", "north", "west", "general", "best", "time", "days", "high", "where", "get", "much"}
 
 
+GENERAL_Q = re.compile(r"this week|today|right now|what (should|do|can) i do|next step|is hafte|aaj kya|kya karu|kya karein|इस हफ्ते|क्या करूँ|क्या करें", re.I)
+
+
 def in_domain(query: str) -> bool:
     """True if the query shares at least one title/keyword term with some KB entry.
     (Edge case found in testing: 'best cricket team in india' scored >0 via generic words in body text.)"""
@@ -223,6 +237,13 @@ def in_domain(query: str) -> bool:
 
 def offline_answer(query: str, stage: str) -> str:
     """Fallback when Gemini is unavailable: return the best-matching knowledge base entries verbatim."""
+    # General "what now?" questions have no pest/nutrient keyword, so answer from the current crop stage.
+    # (Edge case found in live testing: "What should I do in my field this week?" was refused offline.)
+    if GENERAL_Q.search(query) and not in_domain(query):
+        stage_notes = [e for e in KB if e["stage"] == stage][:2] or [e for e in KB if e["stage"] == "all"][:1]
+        parts = [f"**{e['title']}** ({e['id']})\n\n{e['text']}" for e in stage_notes]
+        return (f"For your current stage (**{stage}**), the key notes are below. Also check the "
+                f"**Weather advisory** tab for this week's spray/irrigation alerts.\n\n" + "\n\n---\n\n".join(parts))
     hits = retrieve(query, k=2, stage=stage)
     if not hits or not in_domain(query):
         return ("I could not find this in my rice knowledge base. I can only help with rice cultivation "

@@ -158,8 +158,15 @@ with st.sidebar:
         st.text_input("Gemini API key (only if not set in app secrets)", type="password", key="user_key",
                       help="Free key from aistudio.google.com. Kept only in this browser session.")
     key_ok = bool(get_api_key()) and genai is not None
-    st.markdown(("🟢 Gemini connected" if key_ok else "🟠 Offline mode - answers come from the knowledge base only")
-                + (f" · `{st.session_state.model_used}`" if st.session_state.model_used else ""))
+    if not key_ok:
+        st.markdown("🟠 Offline mode - answers come from the knowledge base only")
+    elif st.session_state.get("last_status") == "ok":
+        st.markdown(f"🟢 Gemini connected · `{st.session_state.model_used}`")
+    elif st.session_state.get("last_status"):
+        st.markdown(f"🔴 Gemini error: `{st.session_state.last_status}`")
+        st.caption(st.session_state.get("last_error", "")[:300])
+    else:
+        st.markdown("🟡 API key found - ask a question to test the connection")
     live_wx = st.toggle("Use live weather (Open-Meteo)", value=True)
 
     st.divider()
@@ -188,6 +195,7 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
     key = get_api_key()
     if not key or genai is None:
         return None, "no_key"
+    key = key.strip().strip('"').strip("'").strip()      # tolerate stray spaces/quotes from the secrets box
     client = genai.Client(api_key=key)
     cfg = types.GenerateContentConfig(system_instruction=system, temperature=TEMPERATURE,
                                       max_output_tokens=1024)
@@ -201,10 +209,12 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
                     last = "empty"
                     break
                 st.session_state.model_used = model
+                st.session_state.last_status = "ok"
                 return text, "ok"
             except Exception as ex:  # noqa: BLE001
                 code = getattr(ex, "code", None)
                 msg = str(ex).lower()
+                st.session_state.last_error = f"{model}: {str(ex).replace(key, '***')[:300]}"
                 if code == 404 or "not found" in msg or "not supported" in msg:
                     last = "model_not_found"
                     break                                   # try next model
@@ -212,11 +222,16 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
                     last = "rate_limited"
                     time.sleep(1.5)
                     break                                   # next model may have its own quota
-                if code in (400, 401, 403) and ("api key" in msg or "permission" in msg):
-                    return None, "bad_key"
+                if code == 401 or "api key not valid" in msg or "api_key_invalid" in msg or "invalid api key" in msg:
+                    st.session_state.last_status = "bad_key"
+                    return None, "bad_key"                  # same key for every model - no point retrying
+                if code in (400, 403):
+                    last = "permission_or_request_error"
+                    break                                   # this model may be restricted; try the next one
                 last = "server_error"
                 time.sleep(1 + attempt)                     # transient: retry once
     st.session_state.api_errors += 1
+    st.session_state.last_status = last
     return None, last
 
 
@@ -292,7 +307,8 @@ def answer(user_text: str, image: bytes | None = None, mime: str | None = None) 
     # ---- graceful degradation: knowledge-base-only answer
     notes = {"no_key": "Offline mode (no API key)", "bad_key": "API key rejected",
              "rate_limited": "AI quota reached - try again in a minute", "model_not_found": "AI model unavailable",
-             "server_error": "AI service not responding", "empty": "AI returned an empty answer"}
+             "server_error": "AI service not responding", "empty": "AI returned an empty answer",
+             "permission_or_request_error": "AI request refused for all models"}
     body = E.offline_answer(user_text, stage)
     return {"answer": f"{prefix}⚠️ *{notes.get(status, status)}. Showing verified notes from my knowledge base "
                       f"(English only):*\n\n{body}",
@@ -311,7 +327,7 @@ def new_ticket(reason: str) -> dict:
 
 # ------------------------------------------------------------------ main layout
 st.markdown(
-    "<div style='padding:10px 14px;border-radius:10px;background:#fff7e6;border:1px solid #f0c36d;font-size:0.9rem'>"
+    "<div style='padding:10px 14px;border-radius:10px;background:#fff7e6;color:#3d2e00;border:1px solid #f0c36d;font-size:0.9rem'>"
     "🤖 <b>You are chatting with an AI assistant, not a human.</b> Advice is general and based on a sample "
     "knowledge base. Always confirm pesticide use and serious problems with your KVK or the "
     "Kisan Call Centre <b>1800-180-1551</b>.</div>", unsafe_allow_html=True)
