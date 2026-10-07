@@ -164,7 +164,9 @@ with st.sidebar:
         st.markdown(f"🟢 Gemini connected · `{st.session_state.model_used}`")
     elif st.session_state.get("last_status"):
         st.markdown(f"🔴 Gemini error: `{st.session_state.last_status}`")
-        st.caption(st.session_state.get("last_error", "")[:300])
+        with st.expander("Details (one line per model tried)"):
+            for e in st.session_state.get("model_errors", []) or [st.session_state.get("last_error", "")]:
+                st.caption(e)
     else:
         st.markdown("🟡 API key found - ask a question to test the connection")
     live_wx = st.toggle("Use live weather (Open-Meteo)", value=True)
@@ -198,8 +200,10 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
     key = key.strip().strip('"').strip("'").strip()      # tolerate stray spaces/quotes from the secrets box
     client = genai.Client(api_key=key)
     cfg = types.GenerateContentConfig(system_instruction=system, temperature=TEMPERATURE,
-                                      max_output_tokens=1024)
+                                      max_output_tokens=4096)   # Gemini 3.x "thinks" first; a small cap can leave no room for the answer
     last = "error"
+    errors = []                                          # one line per model tried - shown in the sidebar
+    st.session_state.model_errors = errors
     tried = set()
     candidates = model_candidates()
     i = 0
@@ -224,6 +228,11 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
                 text = (resp.text or "").strip()
                 if len(text) < 5:                      # garbage / empty / blocked response
                     last = "empty"
+                    try:
+                        reason = resp.candidates[0].finish_reason
+                    except Exception:  # noqa: BLE001
+                        reason = "unknown"
+                    errors.append(f"{model}: empty answer (finish_reason={reason})")
                     break
                 st.session_state.model_used = model
                 st.session_state.last_status = "ok"
@@ -232,6 +241,7 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
                 code = getattr(ex, "code", None)
                 msg = str(ex).lower()
                 st.session_state.last_error = f"{model}: {str(ex).replace(key, '***')[:300]}"
+                errors.append(f"{model}: {str(ex).replace(key, '***')[:160]}")
                 if code == 404 or "not found" in msg or "not supported" in msg:
                     last = "model_not_found"
                     break                                   # try next model
