@@ -26,7 +26,7 @@ except Exception:  # SDK missing -> app still runs in offline mode
 # ------------------------------------------------------------------ config
 st.set_page_config(page_title="Dhan Saathi - Rice Advisory Bot", page_icon="🌾", layout="wide")
 
-DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash"]
+DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 MAX_TURNS_SENT = 8          # conversation memory window sent to the model (user+bot messages)
 SESSION_MSG_LIMIT = 40      # protects the free-tier quota from one runaway session
 TEMPERATURE = 0.2           # low temperature -> more consistent answers to rephrased questions
@@ -200,7 +200,24 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
     cfg = types.GenerateContentConfig(system_instruction=system, temperature=TEMPERATURE,
                                       max_output_tokens=1024)
     last = "error"
-    for model in model_candidates():
+    tried = set()
+    candidates = model_candidates()
+    i = 0
+    while True:
+        if i >= len(candidates):
+            # every known name failed -> ask Google which models this key can actually use (once per session)
+            if last in ("model_not_found", "permission_or_request_error") and "discovered" not in st.session_state:
+                st.session_state.discovered = discover_models(client)
+                new = [m for m in st.session_state.discovered if m not in tried]
+                if new:
+                    candidates += new
+                    continue
+            break
+        model = candidates[i]
+        i += 1
+        if model in tried:
+            continue
+        tried.add(model)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=contents, config=cfg)
@@ -233,6 +250,21 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
     st.session_state.api_errors += 1
     st.session_state.last_status = last
     return None, last
+
+
+def discover_models(client) -> list[str]:
+    """List the Flash models this API key may call with generateContent (newest first)."""
+    try:
+        names = []
+        for m in client.models.list():
+            n = (m.name or "").replace("models/", "")
+            acts = [a.lower() for a in (m.supported_actions or [])]
+            if "flash" in n and "generatecontent" in acts and not any(x in n for x in ("tts", "live", "image", "audio", "transcribe")):
+                names.append(n)
+        return sorted(names, reverse=True)[:5]
+    except Exception as ex:  # noqa: BLE001
+        st.session_state.last_error = f"model list failed: {str(ex)[:200]}"
+        return []
 
 
 def build_context(query: str) -> tuple[str, list[str]]:
