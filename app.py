@@ -117,16 +117,31 @@ def get_api_key() -> str | None:
     return k or st.session_state.get("user_key") or None
 
 
-def get_xai_key() -> str | None:
+# OpenAI-compatible providers. Put ONE of these keys in Streamlit secrets to use it instead of Gemini.
+#   name: (secret name, base URL, default models, secret for model override, keep-model filter for auto-discovery)
+COMPAT = {
+    "Groq":       ("GROQ_API_KEY", "https://api.groq.com/openai/v1", ["llama-3.3-70b-versatile"], "GROQ_MODEL",
+                   lambda m: not any(x in m for x in ("whisper", "guard", "tts", "embed"))),
+    "OpenRouter": ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", ["meta-llama/llama-3.3-70b-instruct:free"],
+                   "OPENROUTER_MODEL", lambda m: m.endswith(":free")),
+    "Grok":       ("XAI_API_KEY", "https://api.x.ai/v1", ["grok-4.7"], "XAI_MODEL",
+                   lambda m: "grok" in m and "imag" not in m),
+}
+
+
+def _secret(name: str) -> str | None:
     try:
-        k = st.secrets.get("XAI_API_KEY")
+        v = st.secrets.get(name)
     except Exception:
-        k = None
-    return (k or "").strip().strip('"').strip("'").strip() or None
+        v = None
+    return (v or "").strip().strip('"').strip("'").strip() or None
 
 
-PROVIDER = "Grok" if get_xai_key() else "Gemini"   # XAI_API_KEY in secrets switches the app to Grok (xAI)
-XAI_URL = "https://api.x.ai/v1"
+def get_xai_key() -> str | None:   # any OpenAI-compatible key (kept name for backwards compatibility)
+    return next((_secret(c[0]) for c in COMPAT.values() if _secret(c[0])), None)
+
+
+PROVIDER = next((n for n, c in COMPAT.items() if _secret(c[0])), "Gemini")
 
 
 def model_candidates() -> list[str]:
@@ -187,7 +202,7 @@ with st.sidebar:
     if st.button("🗑️ Start new conversation", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
-    st.caption(f"🔒 Privacy: your messages and profile are sent to {'xAI (Grok)' if PROVIDER == 'Grok' else 'Google (Gemini)'} to generate answers. "
+    st.caption(f"🔒 Privacy: your messages and profile are sent to { {'Grok': 'xAI (Grok)', 'Groq': 'Groq', 'OpenRouter': 'OpenRouter'}.get(PROVIDER, 'Google (Gemini)') } to generate answers. "
                "Do not type your name, phone number, Aadhaar or bank details. Nothing is stored after you close the tab.")
 
 profile = {"district": district, "variety": variety, "stage": stage, "days_after_transplanting": dat,
@@ -276,11 +291,12 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
 
 def call_grok(history: list[dict], user_block: str, system: str,
               image: bytes | None = None, mime: str | None = None) -> tuple[str | None, str]:
-    """xAI Grok via its OpenAI-compatible chat-completions endpoint. Same fallbacks as Gemini."""
+    """Groq / OpenRouter / xAI Grok via the OpenAI-compatible chat-completions endpoint. Same fallbacks as Gemini."""
     import base64
     import requests
 
-    key = get_xai_key()
+    secret_name, base_url, default_models, model_secret, keep = COMPAT[PROVIDER]
+    key = _secret(secret_name)
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     msgs = [{"role": "system", "content": system}]
     msgs += [{"role": "user" if m["role"] == "user" else "assistant", "content": m["content"]} for m in history]
@@ -291,20 +307,17 @@ def call_grok(history: list[dict], user_block: str, system: str,
     else:
         msgs.append({"role": "user", "content": user_block})
 
-    try:
-        pref = st.secrets.get("XAI_MODEL")
-    except Exception:
-        pref = None
-    candidates = list(dict.fromkeys([m for m in (st.session_state.model_used, pref, "grok-4.7") if m]))
+    pref = _secret(model_secret)
+    candidates = list(dict.fromkeys([m for m in [st.session_state.model_used, pref, *default_models] if m]))
     errors, tried, last, i = [], set(), "error", 0
     st.session_state.model_errors = errors
     while True:
         if i >= len(candidates):
             if last == "model_not_found" and "xai_discovered" not in st.session_state:
                 try:   # ask xAI which models this key can use
-                    r = requests.get(f"{XAI_URL}/models", headers=headers, timeout=15)
+                    r = requests.get(f"{base_url}/models", headers=headers, timeout=15)
                     ids = [d["id"] for d in r.json().get("data", [])]
-                    st.session_state.xai_discovered = [x for x in ids if "grok" in x and "imag" not in x][:5]
+                    st.session_state.xai_discovered = [x for x in ids if keep(x)][:5]
                 except Exception as ex:  # noqa: BLE001
                     st.session_state.xai_discovered = []
                     errors.append(f"model list failed: {str(ex)[:120]}")
@@ -320,7 +333,7 @@ def call_grok(history: list[dict], user_block: str, system: str,
         tried.add(model)
         for attempt in range(2):
             try:
-                r = requests.post(f"{XAI_URL}/chat/completions", headers=headers, timeout=60,
+                r = requests.post(f"{base_url}/chat/completions", headers=headers, timeout=60,
                                   json={"model": model, "messages": msgs, "temperature": TEMPERATURE,
                                         "max_tokens": 4096})
             except Exception as ex:  # noqa: BLE001  network error / timeout
@@ -347,6 +360,11 @@ def call_grok(history: list[dict], user_block: str, system: str,
             if r.status_code in (400, 401) and ("api key" in low or "incorrect" in low or "unauthor" in low):
                 st.session_state.last_status = "bad_key"
                 return None, "bad_key"
+            if r.status_code == 400 and image and isinstance(msgs[-1]["content"], list):
+                # text-only model: drop the photo and retry with the symptom description only
+                msgs[-1] = {"role": "user", "content": user_block + "\n(Note: a photo was uploaded but this model "
+                                                                    "cannot see images; answer from the text only.)"}
+                continue
             if r.status_code == 403 or "credit" in low or "billing" in low:
                 last = "no_credits"
                 break
@@ -442,7 +460,7 @@ def answer(user_text: str, image: bytes | None = None, mime: str | None = None) 
 
     system = SYSTEM_PROMPT.replace("{language}", LANGS[lang])
     user_block = f"CONTEXT (not visible to farmer):\n{ctx}\n\nFARMER'S QUESTION:\n{user_text}"
-    if PROVIDER == "Grok":
+    if PROVIDER != "Gemini":
         text, status = call_grok(history, user_block, system, image, mime)
     else:
         text, status = call_gemini(contents, system)
@@ -567,7 +585,7 @@ with tab_chat:
                 colour = {"High": "green", "Medium": "orange", "Low": "red", "KB": "blue"}.get(conf, "gray")
                 mode = meta.get("mode", "")
                 st.caption(f":{colour}[● Confidence: {conf}] · Sources: {meta.get('sources', 'none')} · "
-                           f"{mode.capitalize() if mode in ('gemini', 'grok') else mode}")
+                           f"{PROVIDER if not mode.startswith(('offline', 'guardrail')) else mode}")
                 if meta.get("escalate"):
                     st.info("🧑‍🌾 This may need a human expert. Use the **Talk to an expert** tab or call "
                             "**1800-180-1551**.")
