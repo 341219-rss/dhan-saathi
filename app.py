@@ -117,6 +117,18 @@ def get_api_key() -> str | None:
     return k or st.session_state.get("user_key") or None
 
 
+def get_xai_key() -> str | None:
+    try:
+        k = st.secrets.get("XAI_API_KEY")
+    except Exception:
+        k = None
+    return (k or "").strip().strip('"').strip("'").strip() or None
+
+
+PROVIDER = "Grok" if get_xai_key() else "Gemini"   # XAI_API_KEY in secrets switches the app to Grok (xAI)
+XAI_URL = "https://api.x.ai/v1"
+
+
 def model_candidates() -> list[str]:
     try:
         m = st.secrets.get("GEMINI_MODEL")
@@ -154,16 +166,16 @@ with st.sidebar:
     area = st.number_input("Area (acres)", min_value=0.5, max_value=200.0, value=5.0, step=0.5)
 
     st.markdown("#### ⚙️ AI engine")
-    if not get_api_key():
+    if not get_api_key() and not get_xai_key():
         st.text_input("Gemini API key (only if not set in app secrets)", type="password", key="user_key",
                       help="Free key from aistudio.google.com. Kept only in this browser session.")
-    key_ok = bool(get_api_key()) and genai is not None
+    key_ok = bool(get_xai_key()) or (bool(get_api_key()) and genai is not None)
     if not key_ok:
         st.markdown("🟠 Offline mode - answers come from the knowledge base only")
     elif st.session_state.get("last_status") == "ok":
-        st.markdown(f"🟢 Gemini connected · `{st.session_state.model_used}`")
+        st.markdown(f"🟢 {PROVIDER} connected · `{st.session_state.model_used}`")
     elif st.session_state.get("last_status"):
-        st.markdown(f"🔴 Gemini error: `{st.session_state.last_status}`")
+        st.markdown(f"🔴 {PROVIDER} error: `{st.session_state.last_status}`")
         with st.expander("Details (one line per model tried)"):
             for e in st.session_state.get("model_errors", []) or [st.session_state.get("last_error", "")]:
                 st.caption(e)
@@ -175,7 +187,7 @@ with st.sidebar:
     if st.button("🗑️ Start new conversation", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
-    st.caption("🔒 Privacy: your messages and profile are sent to Google's Gemini API to generate answers. "
+    st.caption(f"🔒 Privacy: your messages and profile are sent to {'xAI (Grok)' if PROVIDER == 'Grok' else 'Google (Gemini)'} to generate answers. "
                "Do not type your name, phone number, Aadhaar or bank details. Nothing is stored after you close the tab.")
 
 profile = {"district": district, "variety": variety, "stage": stage, "days_after_transplanting": dat,
@@ -262,6 +274,96 @@ def call_gemini(contents, system: str) -> tuple[str | None, str]:
     return None, last
 
 
+def call_grok(history: list[dict], user_block: str, system: str,
+              image: bytes | None = None, mime: str | None = None) -> tuple[str | None, str]:
+    """xAI Grok via its OpenAI-compatible chat-completions endpoint. Same fallbacks as Gemini."""
+    import base64
+    import requests
+
+    key = get_xai_key()
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    msgs = [{"role": "system", "content": system}]
+    msgs += [{"role": "user" if m["role"] == "user" else "assistant", "content": m["content"]} for m in history]
+    if image:
+        uri = f"data:{mime or 'image/jpeg'};base64,{base64.b64encode(image).decode()}"
+        msgs.append({"role": "user", "content": [{"type": "text", "text": user_block},
+                                                 {"type": "image_url", "image_url": {"url": uri}}]})
+    else:
+        msgs.append({"role": "user", "content": user_block})
+
+    try:
+        pref = st.secrets.get("XAI_MODEL")
+    except Exception:
+        pref = None
+    candidates = list(dict.fromkeys([m for m in (st.session_state.model_used, pref, "grok-4.7") if m]))
+    errors, tried, last, i = [], set(), "error", 0
+    st.session_state.model_errors = errors
+    while True:
+        if i >= len(candidates):
+            if last == "model_not_found" and "xai_discovered" not in st.session_state:
+                try:   # ask xAI which models this key can use
+                    r = requests.get(f"{XAI_URL}/models", headers=headers, timeout=15)
+                    ids = [d["id"] for d in r.json().get("data", [])]
+                    st.session_state.xai_discovered = [x for x in ids if "grok" in x and "imag" not in x][:5]
+                except Exception as ex:  # noqa: BLE001
+                    st.session_state.xai_discovered = []
+                    errors.append(f"model list failed: {str(ex)[:120]}")
+                new = [m for m in st.session_state.xai_discovered if m not in tried]
+                if new:
+                    candidates += new
+                    continue
+            break
+        model = candidates[i]
+        i += 1
+        if model in tried:
+            continue
+        tried.add(model)
+        for attempt in range(2):
+            try:
+                r = requests.post(f"{XAI_URL}/chat/completions", headers=headers, timeout=60,
+                                  json={"model": model, "messages": msgs, "temperature": TEMPERATURE,
+                                        "max_tokens": 4096})
+            except Exception as ex:  # noqa: BLE001  network error / timeout
+                last = "server_error"
+                errors.append(f"{model}: {str(ex)[:120]}")
+                time.sleep(1 + attempt)
+                continue
+            body = r.text.replace(key, "***")[:200]
+            if r.status_code == 200:
+                try:
+                    text = (r.json()["choices"][0]["message"]["content"] or "").strip()
+                except Exception:  # noqa: BLE001
+                    text = ""
+                if len(text) < 5:
+                    last = "empty"
+                    errors.append(f"{model}: empty answer")
+                    break
+                st.session_state.model_used = model
+                st.session_state.last_status = "ok"
+                return text, "ok"
+            errors.append(f"{model}: HTTP {r.status_code} {body}")
+            st.session_state.last_error = errors[-1]
+            low = body.lower()
+            if r.status_code in (400, 401) and ("api key" in low or "incorrect" in low or "unauthor" in low):
+                st.session_state.last_status = "bad_key"
+                return None, "bad_key"
+            if r.status_code == 403 or "credit" in low or "billing" in low:
+                last = "no_credits"
+                break
+            if r.status_code == 404 or "model" in low and ("not found" in low or "does not exist" in low):
+                last = "model_not_found"
+                break
+            if r.status_code == 429:
+                last = "rate_limited"
+                time.sleep(1.5)
+                break
+            last = "server_error"
+            time.sleep(1 + attempt)
+    st.session_state.api_errors += 1
+    st.session_state.last_status = last
+    return None, last
+
+
 def discover_models(client) -> list[str]:
     """List the Flash models this API key may call with generateContent (newest first)."""
     try:
@@ -338,11 +440,16 @@ def answer(user_text: str, image: bytes | None = None, mime: str | None = None) 
             parts.append(types.Part.from_bytes(data=image, mime_type=mime or "image/jpeg"))
         contents.append(types.Content(role="user", parts=parts))
 
-    text, status = call_gemini(contents, SYSTEM_PROMPT.replace("{language}", LANGS[lang]))
+    system = SYSTEM_PROMPT.replace("{language}", LANGS[lang])
+    user_block = f"CONTEXT (not visible to farmer):\n{ctx}\n\nFARMER'S QUESTION:\n{user_text}"
+    if PROVIDER == "Grok":
+        text, status = call_grok(history, user_block, system, image, mime)
+    else:
+        text, status = call_gemini(contents, system)
     if text:
         r = parse_reply(text)
         r["answer"] = prefix + r["answer"]
-        r["mode"] = "gemini"
+        r["mode"] = PROVIDER.lower()
         r["retrieved"] = kb_ids
         return r
 
@@ -350,7 +457,8 @@ def answer(user_text: str, image: bytes | None = None, mime: str | None = None) 
     notes = {"no_key": "Offline mode (no API key)", "bad_key": "API key rejected",
              "rate_limited": "AI quota reached - try again in a minute", "model_not_found": "AI model unavailable",
              "server_error": "AI service not responding", "empty": "AI returned an empty answer",
-             "permission_or_request_error": "AI request refused for all models"}
+             "permission_or_request_error": "AI request refused for all models",
+             "no_credits": "AI account has no credits / access - add credits in the provider console"}
     body = E.offline_answer(user_text, stage)
     return {"answer": f"{prefix}⚠️ *{notes.get(status, status)}. Showing verified notes from my knowledge base "
                       f"(English only):*\n\n{body}",
@@ -459,7 +567,7 @@ with tab_chat:
                 colour = {"High": "green", "Medium": "orange", "Low": "red", "KB": "blue"}.get(conf, "gray")
                 mode = meta.get("mode", "")
                 st.caption(f":{colour}[● Confidence: {conf}] · Sources: {meta.get('sources', 'none')} · "
-                           f"{'Gemini' if mode == 'gemini' else mode}")
+                           f"{mode.capitalize() if mode in ('gemini', 'grok') else mode}")
                 if meta.get("escalate"):
                     st.info("🧑‍🌾 This may need a human expert. Use the **Talk to an expert** tab or call "
                             "**1800-180-1551**.")
